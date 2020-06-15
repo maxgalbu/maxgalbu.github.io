@@ -145,7 +145,7 @@
   
         <h2 id="tl-dr">tl; dr</h2>
 
-<p>The cursor is not a random number, but is actually a reverse-bitwise number that indicates the index on the hash table that represents the selected database. Given this, you can obtain the progress from the cursor!</p>
+<p>The cursor is not a random number, but is actually a reverse-bitwise number that indicates the index on a hash table, where redis stores the keys for each database. By reversing the cursor, you can see your progress while SCANning!</p>
 
 <p>See the code and comments below if you’re in a hurry, or see the explanation below if you want more insights.</p>
 
@@ -268,7 +268,7 @@
 
 <p>So, in this case redis reserves a hash table as big as <code class="language-plaintext highlighter-rouge">2^8</code>, that is <code class="language-plaintext highlighter-rouge">256</code> or in binary <code class="language-plaintext highlighter-rouge">100000000</code>. As a result, the hash table of a 200 keys database goes from index <code class="language-plaintext highlighter-rouge">00000000</code> to index <code class="language-plaintext highlighter-rouge">100000000</code>. Once you use more or less keys than that, Redis will increase or decrease that power of 2, with a process called <em>rehashing</em>, see below for this topic.</p>
 
-<p>Back to the cursor, what Redis does is take each cursor, reverse the binary value: by doing so it obtains an actual index, one that in our example is between <code class="language-plaintext highlighter-rouge">00000000</code> to index <code class="language-plaintext highlighter-rouge">100000000</code>. Starting from that index, Redis increase the index while looping over the hash table, until at least <code class="language-plaintext highlighter-rouge">COUNT</code> keys are found, then reverse the binary again, converting it to decimal and returning it to you. So for example, with the same database with 200 keys, <code class="language-plaintext highlighter-rouge">SCAN 0 COUNT 10</code> could follow this flow:</p>
+<p>Back to the cursor, what Redis does is take each cursor and reverse the binary value: by doing so it obtains an actual index, one that in our example is between <code class="language-plaintext highlighter-rouge">00000000</code> to index <code class="language-plaintext highlighter-rouge">100000000</code>. Starting from that index, Redis increase the index while looping over the hash table, until at least <code class="language-plaintext highlighter-rouge">COUNT</code> keys are found, then reverse the binary again, converting it to decimal and returning it to you. So for example, with the same database with 200 keys, <code class="language-plaintext highlighter-rouge">SCAN 0 COUNT 10</code> could follow this flow:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>COMMAND  BINARY     SWAPPED    NEW BIN   DECIMAL  SWAPPED   NEW CURSOR
 SCAN 0   00000000   00000000   00001010  10       01010000  80
